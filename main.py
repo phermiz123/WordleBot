@@ -1,7 +1,9 @@
 from curses.ascii import isalnum
 from wordle import WordleBot
 
-def check_isalum(word):
+# PATH = "/User/local/bin/chromedriver.exe"
+
+def check_isalnum(word):
     for char in word:
         if not isalnum(char):
             return False
@@ -24,11 +26,6 @@ while not len(starting_word) == 5 or not check_isalnum(starting_word):
 
 starting_word = starting_word.lower()
 
-data_word = input("Enter the info about first word: ")
+bot = WordleBot("words.txt", starting_word)
+bot.solve_wordle()
 
-while check_data_error(data_word):
-    data_word = input("The data you entered is not valid, please try again: ")
-
-data_word = data_word.lower()
-
-bot = WordleBot("words.txt", starting_word, data_word)
