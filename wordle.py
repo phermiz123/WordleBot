@@ -70,8 +70,6 @@ class WordleBot:
 
         for guesses in range(5):
             
-            print("Current length of answer list: ")
-            print(len(answers))
             min_count = 1e6
             guess_word = ""
             best_guess_map = {}
@@ -97,9 +95,6 @@ class WordleBot:
 
                 biggest_answer_list_for_curr_guess = max([len(val) for val in curr_guess_map.values()])
 
-                if(biggest_answer_list_for_curr_guess > 1):
-
-                    print(biggest_answer_list_for_curr_guess)
 
                 if biggest_answer_list_for_curr_guess < min_count:
                     min_count = biggest_answer_list_for_curr_guess
@@ -121,7 +116,7 @@ class WordleBot:
             if data_state == [2,2,2,2,2]:
                 found_solution = True
                 break
-            elif len(self.answers) == 1:
+            elif len(answers) == 1:
                 found_solution = True
                 self.enter_word(answers[0])
 
