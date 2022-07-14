@@ -1,4 +1,3 @@
-from doctest import FAIL_FAST
 import imp
 from importlib.resources import path
 from typing import Set
@@ -13,87 +12,156 @@ from selenium.webdriver.chrome.service import Service
 import time
 
 class WordleBot:
-    def __init__(self, wordsfile, startWord):
+
+    def __init__(self):
+
+        # Setting up all the driver stuff with Selenium
         PATH = "/usr/local/bin/chromedriver.exe"
         self.driver = webdriver.Chrome()
         self.driver.get("https://www.nytimes.com/games/wordle/index.html")
-        self.words = []
-        self.currWord = startWord
 
-        with open(wordsfile, 'r') as file:
+        # Sets up the answers and guess list 
+        self.guesses = []
+        self.answers = []
+
+        with open("guesses.txt", 'r') as file:
             for line in file:
-                self.words.append(line)
+                self.guesses.append(line)
+        
+        with open("answers.txt", 'r') as file:
+            for line in file:
+                self.answers.append(line)
+        
+        # Clicks out of the pop ups and gets the tiles organized into rows
+        time.sleep(5)
 
-        try:
-            main_page = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "dark"))
-            )
+        dark = self.driver.find_element(By.CLASS_NAME, "dark")
+        dark.click()
 
-            main_page.click()
-            main_page.send_keys(startWord, Keys.ENTER)
-        except:
-            self.driver.quit()
+        board = self.driver.find_element(By.CLASS_NAME, "Board-module_board__lbzlf")
+        self.rows = board.find_elements(By.CLASS_NAME, "Row-module_row__dEHfN")
 
-        time.sleep(10)
-
-        board = self.driver.find_element(By.CLASS_NAME, 'Board-module_board__lbzlf')
-        self.rows = board.find_elements(By.CLASS_NAME, 'Row-module_row__dEHfN')
+        
 
 
     def get_state_tiles(self, guess_num):
         
-        data_state = ""
+        data_state = []
         current_row = self.rows[guess_num].find_elements(By.CLASS_NAME, 'Tile-module_tile__3ayIZ')
 
         for tiles in current_row:
             tile_state = tiles.get_attribute('data-state')
 
             if tile_state == 'absent':
-                data_state += 'a'
+                data_state.append(0)
             elif tile_state == 'present':
-                data_state += 'p'
+                data_state.append(1)
             else:
-                data_state += 'c'
+                data_state.append(2)
 
-        return data_state
+        return tuple(data_state)
 
 
     def solve_wordle(self):
-        guesses = 0
-        found_solution = False
 
-        while guesses < 6:
+        found_solution = False
+        answers = self.answers
+
+
+        for guesses in range(5):
+            
+            print("Current length of answer list: ")
+            print(len(answers))
+            min_count = 1e6
+            guess_word = ""
+            best_guess_map = {}
+            words_to_consider = []
+            
+            if guesses == 0:
+                words_to_consider = ["arise"]
+            else:
+                words_to_consider = self.guesses
+            
+            for word_guesses in words_to_consider:
+                
+                curr_guess_map = {}
+
+                for possible_answer in answers:
+                    colors = self.get_colors(possible_answer, word_guesses)
+
+                    if tuple(colors) not in curr_guess_map:
+                        curr_guess_map[tuple(colors)] = [possible_answer]
+                    else:
+                        curr_guess_map[tuple(colors)].append(possible_answer)
+
+
+                biggest_answer_list_for_curr_guess = max([len(val) for val in curr_guess_map.values()])
+
+                if(biggest_answer_list_for_curr_guess > 1):
+
+                    print(biggest_answer_list_for_curr_guess)
+
+                if biggest_answer_list_for_curr_guess < min_count:
+                    min_count = biggest_answer_list_for_curr_guess
+                    guess_word = word_guesses
+
+                    best_guess_map = curr_guess_map
+
+            # Enter word and give a slight delay before getting colors from website
+            self.enter_word(guess_word)
+            time.sleep(5)
+            
 
             data_state = self.get_state_tiles(guesses)
 
-            if data_state == "ccccc":
+            if data_state in best_guess_map:
+                answers = best_guess_map[data_state]
+            
+
+            if data_state == [2,2,2,2,2]:
                 found_solution = True
                 break
-            elif len(self.words) == 0:
-                break
-
-            self.currWord = self.words[0] 
-            
-            try:
-                main_page = WebDriverWait(self.driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "dark"))
-                )
-
-                main_page.click()
-                main_page.send_keys(self.currWord, Keys.ENTER)
-            except:
-                self.driver.quit()
-
-            time.sleep(10)
-
-            guesses += 1
+            elif len(self.answers) == 1:
+                found_solution = True
+                self.enter_word(answers[0])
 
         if found_solution == True:
-            print("Wordle has been solved!")
+            print("Wordle has been solved")
         else:
-            print("Not solved")
+            print("Could not solve wordle")
 
-        # self.driver.quit()
 
+
+
+
+    def get_colors(self, answer, guess):
+
+        colors = [0,0,0,0,0]
+
+        # Checks for green
+        for i in range(5):
+            if guess[i] == answer[i]:
+                colors[i] = 2
+                answer = answer[:i] + ' ' + answer[i + 1:]
         
+
+        # Checks for yellow
+        for i in range(5):
+            curr_char = guess[i]
+            if curr_char in answer and colors[i] == 0:
+                colors[i] = 1
+                first_pos = answer.find(curr_char)
+                answer = answer[:first_pos] + ' ' + answer[first_pos + 1:]
+        
+        return tuple(colors)
+
+
+    def enter_word(self, word):
+        dark = self.driver.find_element(By.CLASS_NAME, "dark")
+        dark.send_keys(word, Keys.ENTER)
+
+                
+
+
+
         
