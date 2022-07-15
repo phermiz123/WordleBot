@@ -35,8 +35,8 @@ class WordleBot:
         # Clicks out of the pop ups and gets the tiles organized into rows
         time.sleep(5)
 
-        dark = self.driver.find_element(By.CLASS_NAME, "dark")
-        dark.click()
+        pop_up = self.driver.find_element(By.CLASS_NAME, "Modal-module_closeIcon__b4z74")
+        pop_up.click()
 
         board = self.driver.find_element(By.CLASS_NAME, "Board-module_board__lbzlf")
         self.rows = board.find_elements(By.CLASS_NAME, "Row-module_row__dEHfN")
@@ -67,6 +67,7 @@ class WordleBot:
         found_solution = False
         answers = self.answers
 
+        print("...Solving Wordle...")
 
         for guesses in range(5):
             
@@ -151,9 +152,85 @@ class WordleBot:
         return tuple(colors)
 
 
-    def enter_word(self, word):
-        dark = self.driver.find_element(By.CLASS_NAME, "dark")
-        dark.send_keys(word, Keys.ENTER)
+    def test_wordle(self):
+
+        
+        total_correct = 0
+        total_so_far = 0
+        total_num_guesses = 0
+        average = 0
+
+        for actual_answer in self.answers:
+
+            answers = self.answers
+            num_guesses = 6
+            
+            for guesses in range(5):
+                
+                min_count = 1e6
+                guess_word = ""
+                best_guess_map = {}
+                words_to_consider = []
+                
+                if guesses == 0:
+                    words_to_consider = ["arise"]
+                else:
+                    words_to_consider = self.guesses
+                
+                for word_guesses in words_to_consider:
+                    
+                    curr_guess_map = {}
+
+                    for possible_answer in answers:
+                        colors = self.get_colors(possible_answer, word_guesses)
+
+                        if tuple(colors) not in curr_guess_map:
+                            curr_guess_map[tuple(colors)] = [possible_answer]
+                        else:
+                            curr_guess_map[tuple(colors)].append(possible_answer)
+
+
+                    biggest_answer_list_for_curr_guess = max([len(val) for val in curr_guess_map.values()])
+
+
+                    if biggest_answer_list_for_curr_guess < min_count:
+                        min_count = biggest_answer_list_for_curr_guess
+                        guess_word = word_guesses
+
+                        best_guess_map = curr_guess_map
+
+                
+
+                data_state = self.get_colors(actual_answer, guess_word)
+
+                if data_state in best_guess_map:
+                    answers = best_guess_map[data_state]
+                
+
+                if data_state == [2,2,2,2,2]:
+                    found_solution = True
+                    num_guesses = guesses
+                    break
+                elif len(answers) == 1:
+                    num_guesses = guesses
+                    found_solution = True
+                    break
+
+            total_num_guesses += num_guesses + 1
+            total_so_far += 1
+
+            if found_solution:
+                total_correct += 1
+            
+            print("Total correct so far: " + str(total_correct))
+            average_so_far = total_num_guesses / total_so_far
+            print("Average number of guesses so far: " + str(average_so_far))
+        
+        print("Total Percentate Correct: " + str(total_correct / len(self.answers)))
+        print("Avergae number of guesses: " + str(total_num_guesses / len(self.answers)))
+            
+
+            
 
                 
 
