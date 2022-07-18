@@ -1,5 +1,5 @@
 Hello, welcome to the Wordle Bot. Wordle is a game published by the New York Times. The essence of the game is that you have
-six guesses in order to guess the correct five letter word. Once you have guessed the correct word, you have won the game.
+six guesses in order to guess the correct five letter word. Once you have guessed the correct word, you have won the game. This bot was inspired by 3Blue1Brown's video on Youtube.
 
 Rules of Wordle: In Wordle, you have six guesses to guess the correct word. For each guess, if that letter does not exist in the correct word it will be grey. If that letter is in the word but is not in the correct position then that letter will be yellow. Finally, if that letter is in the right position and is the correct letter than that letter will be green. You know you have guessed the correct word when all letters turn green.
 
