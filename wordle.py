@@ -127,6 +127,9 @@ class WordleBot:
             print("Could not solve wordle")
 
 
+    def enter_word(self, word):
+        main_page = self.driver.find_element(By.CLASS_NAME, "dark")
+        main_page.send_keys(word, Keys.ENTER)
 
 
 
@@ -163,7 +166,7 @@ class WordleBot:
         for actual_answer in self.answers:
 
             answers = self.answers
-            num_guesses = 6
+            num_guesses = 0
             
             for guesses in range(5):
                 
@@ -202,6 +205,7 @@ class WordleBot:
                 
 
                 data_state = self.get_colors(actual_answer, guess_word)
+                num_guesses += 1
 
                 if data_state in best_guess_map:
                     answers = best_guess_map[data_state]
@@ -209,10 +213,8 @@ class WordleBot:
 
                 if data_state == [2,2,2,2,2]:
                     found_solution = True
-                    num_guesses = guesses
                     break
                 elif len(answers) == 1:
-                    num_guesses = guesses
                     found_solution = True
                     break
 
@@ -226,8 +228,10 @@ class WordleBot:
             average_so_far = total_num_guesses / total_so_far
             print("Average number of guesses so far: " + str(average_so_far))
         
+        
+        print("--------Totals--------")
         print("Total Percentate Correct: " + str(total_correct / len(self.answers)))
-        print("Avergae number of guesses: " + str(total_num_guesses / len(self.answers)))
+        print("Average number of guesses: " + str(total_num_guesses / len(self.answers)))
             
 
             
